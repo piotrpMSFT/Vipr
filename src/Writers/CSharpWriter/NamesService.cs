@@ -251,5 +251,10 @@ namespace CSharpWriter
 
             return name;
         }
+
+        public static string GetModelPropertyName(OdcmProperty odcmProperty)
+        {
+            return odcmProperty.Name;
+        }
     }
 }

@@ -15,7 +15,7 @@ using Moq;
 
 namespace CSharpWriterUnitTests
 {
-    public class CodeGenTestBase
+    public class CodeGenTestBase : IDisposable
     {
         public const BindingFlags PermissiveBindingFlags =
             BindingFlags.Public
@@ -87,13 +87,7 @@ namespace CSharpWriterUnitTests
 
         public Assembly CompileText(IEnumerable<string> referencedAssemblies, params string[] cSharpSource)
         {
-            var compilerParams = new CompilerParameters
-            {
-                GenerateInMemory = true,
-                TreatWarningsAsErrors = false,
-                GenerateExecutable = false,
-                CompilerOptions = "/optimize",
-            };
+            var compilerParams = GetCompilerParameters();
 
             compilerParams.ReferencedAssemblies.AddRange(new[] { "System.dll" });
 
@@ -110,6 +104,31 @@ namespace CSharpWriterUnitTests
             throw new Exception(text);
         }
 
+        private static CompilerParameters GetCompilerParameters()
+        {
+            if (Debugger.IsAttached)
+            {
+                return new CompilerParameters
+                {
+                    CompilerOptions = "/debug:pdbonly",
+                    GenerateInMemory = false,
+                    IncludeDebugInformation = true,
+                    TempFiles = new TempFileCollection(AppDomain.CurrentDomain.BaseDirectory, true),
+                    TreatWarningsAsErrors = false,
+                };
+            }
+            else
+            {
+                return new CompilerParameters
+                {
+                    CompilerOptions = "/optimize",
+                    GenerateExecutable = false,
+                    GenerateInMemory = true,
+                    TreatWarningsAsErrors = false,
+                };
+            }
+        }
+
         protected static T GetValue<T>(Assembly asm, string methodName, string typeName, string @namespace) where T : class
         {
             return GetValue<T>(asm, methodName, @namespace + "." + typeName);
@@ -124,6 +143,10 @@ namespace CSharpWriterUnitTests
             var instance = ci.Invoke(new object[] { });
 
             return methInfo.Invoke(instance, new object[] { }) as T;
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

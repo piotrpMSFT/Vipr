@@ -4,6 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using CSharpWriter;
 using Vipr.Core.CodeModel;
 
 namespace Microsoft.Its.Recipes
@@ -45,7 +47,7 @@ namespace Microsoft.Its.Recipes
 
             retVal.Types.AddRange(Any.Sequence(s => Any.OdcmEnum()));
 
-            retVal.Types.AddRange(Any.Sequence(s => Any.ComplexOdcmType(retVal)));
+            retVal.Types.AddRange(Any.Sequence(s => Any.ComplexOdcmClass(retVal)));
 
             var classes = Any.Sequence(s => Any.EntityOdcmClass(retVal)).ToArray();
 
@@ -134,14 +136,14 @@ namespace Microsoft.Its.Recipes
 
         public static object ComplexOdcmField(OdcmNamespace odcmNamespace, Action<OdcmField> config = null)
         {
-            var retVal = new OdcmField(Any.CSharpIdentifier()) { Type = Any.ComplexOdcmType(odcmNamespace) };
+            var retVal = new OdcmField(Any.CSharpIdentifier()) { Type = Any.ComplexOdcmClass(odcmNamespace) };
 
             if (config != null) config(retVal);
 
             return retVal;
         }
 
-        private static OdcmClass ComplexOdcmType(OdcmNamespace odcmNamespace, Action<OdcmClass> config = null)
+        public static OdcmClass ComplexOdcmClass(OdcmNamespace odcmNamespace, Action<OdcmClass> config = null)
         {
             var retVal = new OdcmClass(Any.CSharpIdentifier(), odcmNamespace.Name, OdcmClassKind.Complex);
 
@@ -165,7 +167,12 @@ namespace Microsoft.Its.Recipes
 
         public static OdcmProperty EntityOdcmProperty(OdcmNamespace odcmNamespace, Action<OdcmProperty> config = null)
         {
-            var retVal = new OdcmProperty(Any.CSharpIdentifier()) { Type = Any.EntityOdcmClass(odcmNamespace) };
+            return OdcmEntityProperty(Any.EntityOdcmClass(odcmNamespace), config);
+        }
+
+        private static OdcmProperty OdcmEntityProperty(OdcmClass @class, Action<OdcmProperty> config)
+        {
+            var retVal = new OdcmProperty(Any.CSharpIdentifier()) { Type = @class };
 
             retVal.Field = new OdcmField(Any.CSharpIdentifier()) { Type = retVal.Type };
 
@@ -176,7 +183,7 @@ namespace Microsoft.Its.Recipes
 
         public static OdcmProperty ComplexOdcmProperty(OdcmNamespace odcmNamespace, Action<OdcmProperty> config = null)
         {
-            var retVal = new OdcmProperty(Any.CSharpIdentifier()) { Type = Any.ComplexOdcmType(odcmNamespace) };
+            var retVal = new OdcmProperty(Any.CSharpIdentifier()) { Type = Any.ComplexOdcmClass(odcmNamespace) };
 
             retVal.Field = new OdcmField(Any.CSharpIdentifier()) { Type = retVal.Type };
 
@@ -200,6 +207,10 @@ namespace Microsoft.Its.Recipes
                     p.Type = odcmNamespace.Classes.Where(c => c.Kind == OdcmClassKind.Complex).RandomElement();
                 })));
 
+            retVal.Properties.AddRange(Any.Sequence(i => Any.OdcmEntityProperty(retVal, p => { p.Class = retVal; })));
+
+            retVal.Properties.AddRange(Any.Sequence(i => Any.OdcmEntityProperty(retVal, p => { p.Class = retVal; p.Field.IsCollection = true;})));
+            
             if (config != null) config(retVal);
 
             retVal.Methods.AddRange(Any.Sequence(s => Any.OdcmMethod()));
@@ -216,20 +227,15 @@ namespace Microsoft.Its.Recipes
 
             foreach (var entity in entities)
             {
-                if (Any.Bool())
+                retVal.Properties.Add(new OdcmProperty(entity.Name) { Class = retVal, Type = entity });
+                
+                retVal.Properties.Add(new OdcmProperty(entity.Name + "s")
                 {
-                    retVal.Properties.Add(new OdcmProperty(entity.Name) { Class = retVal, Type = entity });
-                }
-                else
-                {
-                    retVal.Properties.Add(new OdcmProperty(entity.Name + "s")
-                    {
-                        Class = retVal,
-                        Type = entity,
-                        Field =
-                            new OdcmField("_" + entity.Name + "s") { Class = retVal, IsCollection = true, Type = entity }
-                    });
-                }
+                    Class = retVal,
+                    Type = entity,
+                    Field =
+                        new OdcmField("_" + entity.Name + "s") { Class = retVal, IsCollection = true, Type = entity }
+                });
             }
 
             retVal.Methods.AddRange(Any.Sequence(s => Any.OdcmMethod()));
@@ -279,6 +285,11 @@ namespace Microsoft.Its.Recipes
         public static IReadOnlyDictionary<string, string> ServiceMetadata()
         {
             return new Dictionary<string, string> { { "$metadata", "<?xml version=\"1.0\" encoding=\"utf-8\"?><edmx:Edmx Version=\"4.0\" xmlns:edmx=\"http://docs.oasis-open.org/odata/ns/edmx\"></edmx:Edmx>" } };
+        }
+
+        public static Func<Task<String>> TokenGetterFunction(string token = "")
+        {
+            return () => Task.FromResult(token);
         }
     }
 }
