@@ -49,5 +49,22 @@ namespace CSharpWriterUnitTests
 
             return originalProperty.Class.Properties[index];
         }
+
+        public static string DefaultEntitySetName(this OdcmClass odcmClass)
+        {
+            return odcmClass.Name + "s";
+        }
+
+        public static string DefaultEntitySetPath(this OdcmClass odcmClass)
+        {
+            return "/" + odcmClass.DefaultEntitySetName();
+        }
+
+        public static string DefaultEntityPath(this OdcmClass odcmClass, IEnumerable<Tuple<string, object>> keyValues = null)
+        {
+            keyValues = keyValues ?? odcmClass.GetSampleKeyArguments().ToArray();
+            
+            return string.Format("{0}({1})", odcmClass.DefaultEntitySetPath(), ODataKeyPredicate.AsString(keyValues.ToArray()));
+        }
     }
 }

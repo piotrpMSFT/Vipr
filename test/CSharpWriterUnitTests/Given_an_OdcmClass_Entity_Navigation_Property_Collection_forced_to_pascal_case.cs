@@ -13,7 +13,7 @@ namespace CSharpWriterUnitTests
 {
     public class Given_an_OdcmClass_Entity_Navigation_Property_Collection_forced_to_pascal_case : EntityTestBase
     {
-        private IStartedScenario _mockedService;
+        private MockScenario _mockedService;
         private string _camelCasedName;
         private readonly string _pascalCasedName;
 

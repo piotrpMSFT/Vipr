@@ -9,7 +9,7 @@ namespace CSharpWriterUnitTests
 {
     public class Given_an_OdcmClass_Entity_Collection_ExecuteAsync_Method : EntityTestBase
     {
-        private IStartedScenario _serviceMock;
+        private MockScenario _serviceMock;
 
         public Given_an_OdcmClass_Entity_Collection_ExecuteAsync_Method()
         {

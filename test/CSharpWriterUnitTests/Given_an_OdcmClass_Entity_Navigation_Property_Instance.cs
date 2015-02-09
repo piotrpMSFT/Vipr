@@ -14,7 +14,7 @@ namespace CSharpWriterUnitTests
 {
     public class Given_an_OdcmClass_Entity_Navigation_Property_Instance : NavigationPropertyTestBase
     {
-        private IStartedScenario _mockedService;
+        private MockScenario _mockedService;
 
         public Given_an_OdcmClass_Entity_Navigation_Property_Instance()
         {

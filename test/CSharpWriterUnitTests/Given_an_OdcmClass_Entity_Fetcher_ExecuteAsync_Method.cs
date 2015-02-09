@@ -16,7 +16,7 @@ namespace CSharpWriterUnitTests
     /// </summary>
     public class Given_an_OdcmClass_Entity_Fetcher_ExecuteAsync_Method : EntityTestBase
     {
-        private IStartedScenario _mockedService;
+        private MockScenario _mockedService;
 
         public Given_an_OdcmClass_Entity_Fetcher_ExecuteAsync_Method()
         {

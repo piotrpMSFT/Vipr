@@ -16,7 +16,7 @@ namespace CSharpWriterUnitTests
 {
     public class Given_an_OdcmClass_Entity_Fetcher_Collection_Property : EntityTestBase
     {
-        private IStartedScenario _mockedService;
+        private MockScenario _mockedService;
         private object propertyValue;
 
         public Given_an_OdcmClass_Entity_Fetcher_Collection_Property()

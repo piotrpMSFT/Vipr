@@ -11,7 +11,7 @@ namespace CSharpWriterUnitTests
 {
     public class Given_an_OdcmClass_Entity_Fetcher_Expand_Method : EntityTestBase
     {
-        private IStartedScenario _mockedService;
+        private MockScenario _mockedService;
 
         public Given_an_OdcmClass_Entity_Fetcher_Expand_Method()
         {

@@ -7,20 +7,29 @@ using Microsoft.Its.Recipes;
 using Microsoft.OData.Client;
 using Microsoft.OData.ProxyExtensions;
 using Microsoft.Owin;
+using Moq;
 using Newtonsoft.Json.Linq;
 using ODataV4TestService.SelfHost;
+using Vipr.Core.CodeModel;
 
 namespace CSharpWriterUnitTests
 {
     public static class MockScenarioExtensions
     {
-        public static DataServiceContextWrapper GetContext(this IStartedScenario serviceMock,
+        public static DataServiceContextWrapper GetContext(this MockScenario serviceMock,
             Func<Task<string>> tokenGetterFunction = null)
         {
             tokenGetterFunction = tokenGetterFunction ?? Any.TokenGetterFunction();
 
             return new DataServiceContextWrapper(new Uri(serviceMock.GetBaseAddress()), ODataProtocolVersion.V4,
                 tokenGetterFunction);
+        }
+        public static DataServiceContextWrapper GetDefaultContext(this MockScenario serviceMock,
+            OdcmModel model)
+        {
+            return serviceMock
+                .GetContext()
+                .UseJson(model.ToEdmx(), true);
         }
 
         public static object CreateContainer(this IStartedScenario serviceMock, Type containerType,
@@ -74,6 +83,25 @@ namespace CSharpWriterUnitTests
                     });
 
             return mockService;
+        }
+
+        public static MockScenario SetupPostEntity(this MockScenario mockService, OdcmClass @class, Type type)
+        {
+            return mockService.SetupPostEntity(@class.DefaultEntitySetPath(), @class.DefaultEntitySetName(),
+                type.Initialize(@class.GetSampleKeyArguments()));
+        }
+
+        public static MockScenario SetupPostEntity(this MockScenario mockService, OdcmClass @class, object response)
+        {
+            return mockService.SetupPostEntity(@class.DefaultEntitySetPath(), @class.DefaultEntitySetName(),
+                response);
+        }
+
+        public static MockScenario SetupGetEntity(this MockScenario mockService, OdcmClass @class, Type type,
+            IEnumerable<string> expandTargets = null)
+        {
+            return mockService.SetupGetEntity(@class.DefaultEntitySetPath(), @class.DefaultEntitySetName(),
+                type.Initialize(@class.GetSampleKeyArguments()), expandTargets);
         }
 
         public static MockScenario SetupGetEntity(this MockScenario mockService, string entitySetPath,

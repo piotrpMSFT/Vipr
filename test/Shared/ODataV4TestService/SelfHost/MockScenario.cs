@@ -69,7 +69,7 @@ namespace ODataV4TestService.SelfHost
             return Task.FromResult<object>(null);
         }
 
-        public new IStartedScenario Start()
+        public new MockScenario Start()
         {
             base.Start<MockStartup>();
 
