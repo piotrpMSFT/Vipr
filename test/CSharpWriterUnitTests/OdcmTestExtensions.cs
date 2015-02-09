@@ -24,18 +24,6 @@ namespace CSharpWriterUnitTests
             return entityClass.Key.Select(p => new Tuple<string, object>(p.Name, Any.CSharpIdentifier(1)));
         }
 
-        public static string AsJson(this Type type, string baseUri, IEnumerable<Tuple<string, object>> propertyValues)
-        {
-            var instance = Activator.CreateInstance(type);
-
-            instance.SetPropertyValues(propertyValues);
-
-            var jo = JObject.FromObject(instance);
-            jo.AddFirst(new JProperty("@odata.context", baseUri + "$metadata#" + type.Name + "s/$entity"));
-            jo.Remove("ChangedProperties");
-            return jo.ToString();
-        }
-
         public static OdcmProperty Rename(this OdcmProperty originalProperty, string newName)
         {
             var index = originalProperty.Class.Properties.IndexOf(originalProperty);
