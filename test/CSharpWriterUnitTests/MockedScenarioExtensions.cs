@@ -1,42 +1,30 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Reflection;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using System.Xml;
 using Microsoft.Its.Recipes;
 using Microsoft.OData.Client;
-using Microsoft.OData.Edm.Csdl;
 using Microsoft.OData.ProxyExtensions;
+using Microsoft.Owin;
+using Newtonsoft.Json.Linq;
 using ODataV4TestService.SelfHost;
 
 namespace CSharpWriterUnitTests
 {
-    public static class MockedScenarioExtensions
+    public static class MockScenarioExtensions
     {
-        public static DataServiceContextWrapper GetContext(this IStartedScenario serviceMock, Func<Task<string>> tokenGetterFunction = null)
+        public static DataServiceContextWrapper GetContext(this IStartedScenario serviceMock,
+            Func<Task<string>> tokenGetterFunction = null)
         {
             tokenGetterFunction = tokenGetterFunction ?? Any.TokenGetterFunction();
 
-            return new DataServiceContextWrapper(new Uri(serviceMock.GetBaseAddress()), ODataProtocolVersion.V4,  tokenGetterFunction);
+            return new DataServiceContextWrapper(new Uri(serviceMock.GetBaseAddress()), ODataProtocolVersion.V4,
+                tokenGetterFunction);
         }
 
-        public static DataServiceContextWrapper WithDefaultResolvers(this DataServiceContextWrapper context, string @namespace)
-        {
-            context.ResolveName = type => context.DefaultResolveNameInternal(type, @namespace, @namespace) ?? type.FullName;
-            context.ResolveType = name => context.DefaultResolveTypeInternal(name, @namespace, @namespace);
-
-            return context;
-        }
-
-        public static DataServiceContextWrapper WithIgnoreMissingProperties(this DataServiceContextWrapper context)
-        {
-            context.IgnoreMissingProperties = true;
-
-            return context;
-        }
-
-        public static object CreateContainer(this IStartedScenario serviceMock, Type containerType, Func<Task<string>> tokenGetterFunction = null)
+        public static object CreateContainer(this IStartedScenario serviceMock, Type containerType,
+            Func<Task<string>> tokenGetterFunction = null)
         {
             tokenGetterFunction = tokenGetterFunction ?? Any.TokenGetterFunction();
 
@@ -44,70 +32,129 @@ namespace CSharpWriterUnitTests
                 new object[] {new Uri(serviceMock.GetBaseAddress()), tokenGetterFunction});
         }
 
-        public static DataServiceContextWrapper UseJson(this DataServiceContextWrapper context, string edmx,
-            bool addSchema = false)
+        public static MockScenario SetupPostEntity(this MockScenario mockService, string entitySetPath,
+            string entitySetName, object response = null)
         {
-            if (addSchema)
-                edmx =
-                    "<?xml version=\"1.0\" encoding=\"utf-8\"?><edmx:Edmx Version=\"4.0\" xmlns:edmx=\"http://docs.oasis-open.org/odata/ns/edmx\">" +
-                    edmx + "</edmx:Edmx>";
-
-            Debug.WriteLine(edmx);
-
-            var model = EdmxReader.Parse(XmlReader.Create(new StringReader(edmx)));
-
-            context.Format.UseJson(model);
-
-            return context;
-        }
-
-        public static ReadOnlyQueryableSetBase CreateCollection(this DataServiceContextWrapper context, Type collectionType, Type instanceType, string path, object entity = null)
-        {
-            return
-                Activator.CreateInstance(collectionType, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null,
-                    new[]
+            mockService
+                .Setup(c => c.Request.Method == "POST" &&
+                            c.Request.Path.Value == entitySetPath,
+                    (b, c) =>
                     {
-                        context.GetType().GetMethod("CreateQuery", new []{typeof(string)}).MakeGenericMethod(instanceType).Invoke(context, new object[]{path}),
-                        context,
-                        entity,
-                        path
-                    }, null) as ReadOnlyQueryableSetBase;
+                        c.Response.StatusCode = 201;
+                        c.Response.WithDefaultODataHeaders();
+                        c.Response.SetResponseBody(mockService.GetBaseAddress(), entitySetName, response);
+                    });
+
+            return mockService;
         }
 
-        public static RestShallowObjectFetcher CreateFetcher(this DataServiceContextWrapper context, Type fetcherType, string path)
+        public static MockScenario SetupPostEntityChanges(this MockScenario mockService, string entitySetPath)
         {
-            var instance =
-                Activator.CreateInstance(fetcherType) as
-                    RestShallowObjectFetcher;
+            mockService
+                .Setup(c => c.Request.Method == "POST" &&
+                            c.Request.Path.Value == entitySetPath,
+                    (b, c) =>
+                    {
+                        c.Response.StatusCode = 200;
+                        c.Response.WithDefaultODataHeaders();
+                    });
 
-            instance.Initialize(context, path);
-
-            return instance;
+            return mockService;
         }
 
-        public static EntityBase CreateConcrete(this DataServiceContextWrapper context, Type concreteType)
+        public static MockScenario SetupPatchEntityChanges(this MockScenario mockService, string entitySetPath)
         {
-            var instance =
-                Activator.CreateInstance(concreteType) as
-                    EntityBase;
+            mockService
+                .Setup(c => c.Request.Method == "PATCH" &&
+                            c.Request.Path.Value == entitySetPath,
+                    (b, c) =>
+                    {
+                        c.Response.StatusCode = 200;
+                        c.Response.WithDefaultODataHeaders();
+                    });
 
-            typeof(BaseEntityType).GetProperty("Context", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(instance, context);
-
-            context.AddObject(concreteType.Name + "s", instance);
-
-            context.SaveChangesAsync().Wait();
-
-            return instance;
+            return mockService;
         }
 
-        public static Task ExecuteAsync(this ReadOnlyQueryableSetBase collection)
+        public static MockScenario SetupGetEntity(this MockScenario mockService, string entitySetPath,
+            string entitySetName, object response, IEnumerable<string> expandTargets = null)
         {
-            return collection.InvokeMethod<Task>("ExecuteAsync", args: new object[0]);
+            var jObject = response.ToJObject();
+
+            jObject.AddOdataContext(mockService.GetBaseAddress(), entitySetName);
+
+            mockService
+                .Setup(c => c.Request.Method == "GET" &&
+                            c.Request.Path.Value == entitySetPath &&
+                            expandTargets == null || c.Request.Query["$expand"] == string.Join(",", expandTargets),
+                    (b, c) =>
+                    {
+                        c.Response.StatusCode = 200;
+                        c.Response.WithDefaultODataHeaders();
+                        c.Response.Write(jObject.ToString());
+                    });
+
+            return mockService;
         }
 
-        public static Task ExecuteAsync(this RestShallowObjectFetcher fetcher)
+        public static MockScenario SetupGetWithEmptyResponse(this MockScenario mockService, string entityPropertyPath)
         {
-            return fetcher.InvokeMethod<Task>("ExecuteAsync", args: new object[0]);
+            mockService
+                .Setup(c => c.Request.Method == "GET" &&
+                            c.Request.Path.Value == entityPropertyPath,
+                    (b, c) =>
+                    {
+                        c.Response.StatusCode = 200;
+                    });
+
+            return mockService;
+        }
+
+        // This method is not yet working
+        // It needs to be able to set up odata context and related properties
+        public static MockScenario SetupGetEntityProperty(this MockScenario mockService, string entityPropertyPath,
+            string entitySetName, string entityKeyPredicate, string propertyName, object propertyValue)
+        {
+            var jObject = new JObject();
+
+            if (propertyValue != null)
+            {
+                jObject.AddOdataContext(mockService.GetBaseAddress(), entitySetName, entityKeyPredicate, propertyName);
+                jObject.Add(new JProperty("value", SerializePropertyValue(propertyValue)));
+            }
+
+            mockService
+                .Setup(c => c.Request.Method == "GET" &&
+                            c.Request.Path.Value == entityPropertyPath,
+                    (b, c) =>
+                    {
+                        c.Response.StatusCode = 200;
+                        c.Response.WithDefaultODataHeaders();
+                        if(propertyValue != null)
+                            c.Response.Write(jObject.ToString());
+                    });
+
+            return mockService;
+        }
+
+        private static string SerializePropertyValue(object propertyValue)
+        {
+            if (propertyValue is string)
+                return propertyValue as string;
+
+            return JObject.FromObject(propertyValue).ToString();
+        }
+
+        private static void SetResponseBody(this IOwinResponse owinResponse, string baseAddres, string entitySetName, object response)
+        {
+            if (response == null)
+                return;
+
+            var jObject = response.ToJObject();
+
+            jObject.AddOdataContext(baseAddres, entitySetName);
+
+            owinResponse.Write(jObject.ToString());
         }
     }
 }

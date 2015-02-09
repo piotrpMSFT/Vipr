@@ -35,5 +35,31 @@ namespace CSharpWriterUnitTests
             jo.Remove("ChangedProperties");
             return jo.ToString();
         }
+
+        public static OdcmProperty Rename(this OdcmProperty originalProperty, string newName)
+        {
+            var index = originalProperty.Class.Properties.IndexOf(originalProperty);
+
+            originalProperty.Class.Properties[index] =
+                new OdcmProperty(newName)
+                {
+                    Class = originalProperty.Class,
+                    ReadOnly = originalProperty.ReadOnly,
+                    Type = originalProperty.Type,
+                    ContainsTarget = originalProperty.ContainsTarget,
+                    IsCollection = originalProperty.IsCollection,
+                    IsLink = originalProperty.IsLink,
+                    IsNullable = originalProperty.IsNullable,
+                    IsRequired = originalProperty.IsRequired
+                };
+
+            if (originalProperty.Class.Key.Contains(originalProperty))
+            {
+                var keyIndex = originalProperty.Class.Key.IndexOf(originalProperty);
+                originalProperty.Class.Key[keyIndex] = originalProperty.Class.Properties[index];
+            }
+
+            return originalProperty.Class.Properties[index];
+        }
     }
 }

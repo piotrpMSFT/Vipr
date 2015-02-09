@@ -21,8 +21,8 @@ namespace CSharpWriterUnitTests
         [Fact]
         public void When_a_single_property_is_expanded_it_populates_the_DollarExpand_query_parameter()
         {
-            var partialInstancePath = Any.UriPath(1);
-            var instancePath = "/" + partialInstancePath;
+            var partialEntityPath = Any.UriPath(1);
+            var entityPath = "/" + partialEntityPath;
             var keyValues = Class.GetSampleKeyArguments().ToArray();
             var navigationPropertyName = Class.NavigationProperties().Where(p => !p.IsCollection).RandomElement().Name;
 
@@ -31,21 +31,13 @@ namespace CSharpWriterUnitTests
             var lambda = Expression.Lambda(navigationProperty, new[] { param });
 
             using (_mockedService = new MockScenario()
-                    .Setup(c => c.Request.Method == "GET" &&
-                                c.Request.Path.Value == instancePath &&
-                                c.Request.Query["$expand"] == navigationPropertyName,
-                           (b, c) =>
-                           {
-                               c.Response.StatusCode = 200;
-                               c.Response.WithDefaultODataHeaders();
-                               c.Response.Write(ConcreteType.AsJson(b, keyValues));
-                           })
+                    .SetupGetEntity(entityPath, Class.Name+"s", ConcreteType.Initialize(keyValues), new []{navigationPropertyName})
                     .Start())
             {
                 var fetcher = _mockedService
                     .GetContext()
                     .UseJson(Model.ToEdmx(), true)
-                    .CreateFetcher(FetcherType, partialInstancePath);
+                    .CreateFetcher(FetcherType, partialEntityPath);
 
                 var result = fetcher.InvokeMethod<RestShallowObjectFetcher>("Expand", new []{lambda}, new []{ConcreteInterface}).InvokeMethod<Task>("ExecuteAsync").GetPropertyValue<EntityBase>("Result");
 
@@ -70,15 +62,7 @@ namespace CSharpWriterUnitTests
             var lambda2 = GetExpandLambda(navigationPropertyName2);
 
             using (_mockedService = new MockScenario()
-                    .Setup(c => c.Request.Method == "GET" &&
-                                c.Request.Path.Value == instancePath &&
-                                c.Request.Query["$expand"].Split(',').SequenceEqual(new []{navigationPropertyName1, navigationPropertyName2}),
-                           (b, c) =>
-                           {
-                               c.Response.StatusCode = 200;
-                               c.Response.WithDefaultODataHeaders();
-                               c.Response.Write(ConcreteType.AsJson(b, keyValues));
-                           })
+                    .SetupGetEntity(instancePath, Class.Name + "s", ConcreteType.Initialize(keyValues), new[] { navigationPropertyName1, navigationPropertyName2 })
                     .Start())
             {
                 var fetcher = _mockedService

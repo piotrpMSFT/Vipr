@@ -17,6 +17,7 @@ namespace CSharpWriterUnitTests
     public class Given_an_OdcmClass_Entity_Fetcher_Collection_Property : EntityTestBase
     {
         private IStartedScenario _mockedService;
+        private object propertyValue;
 
         public Given_an_OdcmClass_Entity_Fetcher_Collection_Property()
         {
@@ -37,12 +38,12 @@ namespace CSharpWriterUnitTests
             var propertyPath = "/" + entityPath + "/" + collectionProperty.Name;
 
             using (_mockedService = new MockScenario()
-                    .Setup(c => c.Request.Method == "GET" && c.Request.Path.Value == propertyPath, 
-                           c => c.Response.StatusCode = 200)
+                    .SetupGetWithEmptyResponse(propertyPath)
                     .Start())
             {
                 var fetcher = _mockedService
                     .GetContext()
+                    .UseJson(Model.ToEdmx(), true)
                     .CreateFetcher(Proxy.GetClass(collectionProperty.Class.Namespace, collectionProperty.Class.Name + "Fetcher"), entityPath);
 
                 var propertyValue = fetcher.GetPropertyValue(collectionProperty.Name);
@@ -60,7 +61,9 @@ namespace CSharpWriterUnitTests
                     .Where(p => p.IsCollection)
                     .RandomElement();
 
-            var fetcher = MockedScenarioExtensions.CreateFetcher(null, Proxy.GetClass(collectionProperty.Class.Namespace, collectionProperty.Class.Name + "Fetcher"), collectionProperty.Name);
+            var fetcher = DataServiceContextWrapperExtensions.CreateFetcher(null,
+                Proxy.GetClass(collectionProperty.Class.Namespace, collectionProperty.Class.Name + "Fetcher"),
+                collectionProperty.Name);
 
             fetcher.GetPropertyValue(collectionProperty.Name)
                 .Should().Be(fetcher.GetPropertyValue(collectionProperty.Name), "Because the value should be cached.");

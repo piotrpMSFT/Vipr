@@ -28,19 +28,12 @@ namespace CSharpWriterUnitTests
         {
             var instanceName = Any.UriPath(1);
 
-            var instancePath = "/" + instanceName;
+            var entityPath = "/" + instanceName;
 
             var keyValues = Class.GetSampleKeyArguments().ToArray();
 
             using (_mockedService = new MockScenario()
-                    .Setup(c => c.Request.Method == "GET" &&
-                                c.Request.Path.Value == instancePath,
-                           (b,c) =>
-                           {
-                               c.Response.StatusCode = 200;
-                               c.Response.WithDefaultODataHeaders();
-                               c.Response.Write(ConcreteType.AsJson(b, keyValues));
-                           })
+                    .SetupGetEntity(entityPath, Class.Name + "s", ConcreteType.Initialize(keyValues))
                     .Start())
             {
                 var fetcher = _mockedService

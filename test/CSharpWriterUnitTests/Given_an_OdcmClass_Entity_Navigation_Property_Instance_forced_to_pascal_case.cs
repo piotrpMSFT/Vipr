@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 using Microsoft.Its.Recipes;
 using Microsoft.OData.ProxyExtensions;
 using Moq;
@@ -24,22 +26,16 @@ namespace CSharpWriterUnitTests
 
                 Init(m =>
                 {
-                    var property = Class.NavigationProperties().Where(p => !p.IsCollection).RandomElement();
+                    var originalProperty = Class.NavigationProperties().Where(p => !p.IsCollection).RandomElement();
 
-                    Class.Properties.Remove(property);
+                    _camelCasedName = Any.Char('a', 'z') + originalProperty.Name;
 
-                    Class.Properties.Add(
-                        new OdcmProperty(_camelCasedName = Any.Char('a', 'z') + property.Name)
-                        {
-                            Class = property.Class,
-                            ReadOnly = property.ReadOnly,
-                            Type = property.Type
-                        });
+                    originalProperty.Rename(_camelCasedName);
                 });
 
             _pascalCasedName = _camelCasedName.ToPascalCase();
         }
-        
+
         [Fact]
         public void When_retrieved_through_Fetcher_then_request_is_sent_to_server_with_original_name()
         {
@@ -48,14 +44,7 @@ namespace CSharpWriterUnitTests
             var keyValues = Class.GetSampleKeyArguments().ToArray();
 
             using (_mockedService = new MockScenario()
-                    .Setup(c => c.Request.Method == "GET" &&
-                                c.Request.Path.Value == expectedPath,
-                           (b, c) =>
-                           {
-                               c.Response.StatusCode = 200;
-                               c.Response.WithDefaultODataHeaders();
-                               c.Response.Write(ConcreteType.AsJson(b, keyValues));
-                           })
+                    .SetupGetEntity(expectedPath, Class.Name + "s", ConcreteType.Initialize(keyValues))
                     .Start())
             {
                 var fetcher = _mockedService
@@ -80,22 +69,8 @@ namespace CSharpWriterUnitTests
             var keyValues = Class.GetSampleKeyArguments().ToArray();
 
             using (_mockedService = new MockScenario()
-                .Setup(c => c.Request.Method == "POST" &&
-                            c.Request.Path.Value == entitySetPath,
-                    (b, c) =>
-                    {
-                        c.Response.StatusCode = 201;
-                        c.Response.WithDefaultODataHeaders();
-                        c.Response.Write(ConcreteType.AsJson(b, entityKeyValues));
-                    })
-                .Setup(c => c.Request.Method == "GET" &&
-                            c.Request.Path.Value == expectedPath,
-                    (b, c) =>
-                    {
-                        c.Response.StatusCode = 200;
-                        c.Response.WithDefaultODataHeaders();
-                        c.Response.Write(ConcreteType.AsJson(b, keyValues));
-                    })
+                .SetupPostEntity(entitySetPath, Class.Name + "s", ConcreteType.Initialize(entityKeyValues))
+                .SetupGetEntity(expectedPath, Class.Name + "s", ConcreteType.Initialize(keyValues))
                 .Start())
             {
                 var instance = _mockedService
@@ -123,22 +98,8 @@ namespace CSharpWriterUnitTests
             var keyValues = Class.GetSampleKeyArguments().ToArray();
 
             using (_mockedService = new MockScenario()
-                    .Setup(c => c.Request.Method == "POST" &&
-                                c.Request.Path.Value == entitySetPath,
-                           (b, c) =>
-                           {
-                               c.Response.StatusCode = 201;
-                               c.Response.WithDefaultODataHeaders();
-                               c.Response.Write(ConcreteType.AsJson(b, entityKeyValues));
-                           })
-                    .Setup(c => c.Request.Method == "GET" &&
-                                c.Request.Path.Value == expectedPath,
-                           (b, c) =>
-                           {
-                               c.Response.StatusCode = 200;
-                               c.Response.WithDefaultODataHeaders();
-                               c.Response.Write(ConcreteType.AsJson(b, keyValues));
-                           })
+                    .SetupPostEntity(entitySetPath, Class.Name + "s", ConcreteType.Initialize(entityKeyValues))
+                    .SetupGetEntity(expectedPath, Class.Name + "s", ConcreteType.Initialize(keyValues))
                     .Start())
             {
                 var instance = _mockedService
@@ -165,21 +126,8 @@ namespace CSharpWriterUnitTests
             var expectedPath = entityPath;
 
             using (_mockedService = new MockScenario()
-                    .Setup(c => c.Request.Method == "POST" &&
-                                c.Request.Path.Value == entitySetPath,
-                           (b, c) =>
-                           {
-                               c.Response.StatusCode = 201;
-                               c.Response.WithDefaultODataHeaders();
-                               c.Response.Write(ConcreteType.AsJson(b, entityKeyValues));
-                           })
-                    .Setup(c => c.Request.Method == "PATCH" &&
-                                c.Request.Path.Value == expectedPath,
-                           (b, c) =>
-                           {
-                               c.Response.StatusCode = 200;
-                               c.Response.WithDefaultODataHeaders();
-                           })
+                    .SetupPostEntity(entitySetPath, Class.Name + "s", ConcreteType.Initialize(entityKeyValues))
+                    .SetupPatchEntityChanges(expectedPath)
                     .Start())
             {
                 var context = _mockedService
@@ -193,6 +141,31 @@ namespace CSharpWriterUnitTests
                 instance.SetPropertyValue(_pascalCasedName, relatedInstance);
 
                 instance.UpdateAsync().Wait();
+            }
+        }
+
+        [Fact(Skip = "https://github.com/Microsoft/Vipr/issues/27")]
+        public void When_a_renamed_property_is_expanded_it_populates_the_DollarExpand_query_parameter()
+        {
+            var partialInstancePath = Any.UriPath(1);
+            var entityPath = "/" + partialInstancePath;
+            var keyValues = Class.GetSampleKeyArguments().ToArray();
+
+            var param = Expression.Parameter(ConcreteInterface, "i");
+            var navigationProperty = Expression.Property(param, _pascalCasedName);
+            var lambda = Expression.Lambda(navigationProperty, new[] { param });
+
+            using (_mockedService = new MockScenario()
+                    .SetupGetEntity(entityPath, Class.Name + "s", ConcreteType.Initialize(keyValues), new[]{_camelCasedName})
+                    .Start())
+            {
+                var fetcher = _mockedService
+                    .GetContext()
+                    .UseJson(Model.ToEdmx(), true)
+                    .CreateFetcher(FetcherType, partialInstancePath);
+
+                fetcher.InvokeMethod<RestShallowObjectFetcher>("Expand", new[] {lambda}, new[] {ConcreteInterface})
+                    .InvokeMethod<Task>("ExecuteAsync").Wait();
             }
         }
     }

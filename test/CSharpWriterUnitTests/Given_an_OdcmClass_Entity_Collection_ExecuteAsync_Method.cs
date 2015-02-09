@@ -23,8 +23,7 @@ namespace CSharpWriterUnitTests
             var entitySetPath = "/" + entitySetName;
 
             using (_serviceMock = new MockScenario()
-                    .Setup(c => c.Request.Method == "GET" && c.Request.Path.Value == entitySetPath,
-                           c => c.Response.StatusCode = 200)
+                    .SetupGetEntity(entitySetPath, Class.Name + "s", ConcreteType.Initialize(Class.GetSampleKeyArguments()))
                     .Start())
             {
                 var context = _serviceMock.GetContext()

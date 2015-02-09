@@ -121,14 +121,7 @@ namespace CSharpWriterUnitTests
             var keyValues = Class.GetSampleKeyArguments().ToArray();
 
             using (_mockedService = new MockScenario()
-                    .Setup(c => c.Request.Method == "GET" &&
-                                c.Request.Path.Value == expectedPath,
-                           (b, c) =>
-                           {
-                               c.Response.StatusCode = 200;
-                               c.Response.WithDefaultODataHeaders();
-                               c.Response.Write(ConcreteType.AsJson(b, keyValues));
-                           })
+                    .SetupGetEntity(expectedPath, Class.Name + "s", ConcreteType.Initialize(keyValues))
                     .Start())
             {
                 var fetcher = _mockedService
@@ -153,22 +146,8 @@ namespace CSharpWriterUnitTests
             var keyValues = Class.GetSampleKeyArguments().ToArray();
 
             using (_mockedService = new MockScenario()
-                .Setup(c => c.Request.Method == "POST" &&
-                            c.Request.Path.Value == entitySetPath,
-                    (b, c) =>
-                    {
-                        c.Response.StatusCode = 201;
-                        c.Response.WithDefaultODataHeaders();
-                        c.Response.Write(ConcreteType.AsJson(b, entityKeyValues));
-                    })
-                .Setup(c => c.Request.Method == "GET" &&
-                            c.Request.Path.Value == expectedPath,
-                    (b, c) =>
-                    {
-                        c.Response.StatusCode = 200;
-                        c.Response.WithDefaultODataHeaders();
-                        c.Response.Write(ConcreteType.AsJson(b, keyValues));
-                    })
+                .SetupPostEntity(entitySetPath, Class.Name + "s", ConcreteType.Initialize(entityKeyValues))
+                .SetupGetEntity(expectedPath, Class.Name + "s", ConcreteType.Initialize(keyValues))
                 .Start())
             {
                 var instance = _mockedService
@@ -196,22 +175,8 @@ namespace CSharpWriterUnitTests
             var keyValues = Class.GetSampleKeyArguments().ToArray();
 
             using (_mockedService = new MockScenario()
-                    .Setup(c => c.Request.Method == "POST" &&
-                                c.Request.Path.Value == entitySetPath,
-                           (b, c) =>
-                           {
-                               c.Response.StatusCode = 201;
-                               c.Response.WithDefaultODataHeaders();
-                               c.Response.Write(ConcreteType.AsJson(b, entityKeyValues));
-                           })
-                    .Setup(c => c.Request.Method == "GET" &&
-                                c.Request.Path.Value == expectedPath,
-                           (b, c) =>
-                           {
-                               c.Response.StatusCode = 200;
-                               c.Response.WithDefaultODataHeaders();
-                               c.Response.Write(ConcreteType.AsJson(b, keyValues));
-                           })
+                    .SetupPostEntity(entitySetPath, Class.Name + "s", ConcreteType.Initialize(entityKeyValues))
+                    .SetupGetEntity(expectedPath, Class.Name + "s", ConcreteType.Initialize(keyValues))
                     .Start())
             {
                 var instance = _mockedService
@@ -238,21 +203,8 @@ namespace CSharpWriterUnitTests
             var expectedPath = entityPath;
 
             using (_mockedService = new MockScenario()
-                    .Setup(c => c.Request.Method == "POST" &&
-                                c.Request.Path.Value == entitySetPath,
-                           (b, c) =>
-                           {
-                               c.Response.StatusCode = 201;
-                               c.Response.WithDefaultODataHeaders();
-                               c.Response.Write(ConcreteType.AsJson(b, entityKeyValues));
-                           })
-                    .Setup(c => c.Request.Method == "PATCH" &&
-                                c.Request.Path.Value == expectedPath,
-                           (b, c) =>
-                           {
-                               c.Response.StatusCode = 200;
-                               c.Response.WithDefaultODataHeaders();
-                           })
+                    .SetupPostEntity(entitySetPath, Class.Name + "s", ConcreteType.Initialize(entityKeyValues))
+                    .SetupPatchEntityChanges(expectedPath)
                     .Start())
             {
                 var context = _mockedService

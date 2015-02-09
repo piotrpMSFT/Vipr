@@ -31,14 +31,7 @@ namespace CSharpWriterUnitTests
             var keyValues = Class.GetSampleKeyArguments().ToArray();
 
             using (_serviceMock = new MockScenario()
-                    .Setup(c => c.Request.Method == "POST" &&
-                                c.Request.Path.Value == entitySetPath,
-                           (b, c) =>
-                           {
-                               c.Response.StatusCode = 201;
-                               c.Response.WithDefaultODataHeaders();
-                               c.Response.Write(ConcreteType.AsJson(b, keyValues));
-                           })
+                    .SetupPostEntity(entitySetPath, Class.Name + "s", ConcreteType.Initialize(keyValues))
                     .Start())
             {
                 var collection = _serviceMock
@@ -72,22 +65,8 @@ namespace CSharpWriterUnitTests
             var childKeyValues = Class.GetSampleKeyArguments().ToArray();
 
             using (_serviceMock = new MockScenario()
-                    .Setup(c => c.Request.Method == "POST" &&
-                                c.Request.Path.Value == entitySetPath,
-                           (b, c) =>
-                           {
-                               c.Response.StatusCode = 201;
-                               c.Response.WithDefaultODataHeaders();
-                               c.Response.Write(ConcreteType.AsJson(b, parentKeyValues));
-                           })
-                    .Setup(c => c.Request.Method == "POST" &&
-                                c.Request.Path.Value == navPropertyPath,
-                           (b, c) =>
-                           {
-                               c.Response.StatusCode = 201;
-                               c.Response.WithDefaultODataHeaders();
-                               c.Response.Write(ConcreteType.AsJson(b, childKeyValues));
-                           })
+                    .SetupPostEntity(entitySetPath, Class.Name + "s", ConcreteType.Initialize(parentKeyValues))
+                    .SetupPostEntity(navPropertyPath, Class.Name + "s", ConcreteType.Initialize(childKeyValues))
                     .Start())
             {
                 var parentEntity = Activator.CreateInstance(ConcreteType);
@@ -130,22 +109,8 @@ namespace CSharpWriterUnitTests
             var childKeyValues = Class.GetSampleKeyArguments().ToArray();
 
             using (_serviceMock = new MockScenario()
-                    .Setup(c => c.Request.Method == "POST" &&
-                                c.Request.Path.Value == entitySetPath,
-                           (b, c) =>
-                           {
-                               c.Response.StatusCode = 201;
-                               c.Response.WithDefaultODataHeaders();
-                               c.Response.Write(ConcreteType.AsJson(b, parentKeyValues));
-                           })
-                    .Setup(c => c.Request.Method == "POST" &&
-                                c.Request.Path.Value == navPropertyPath,
-                           (b, c) =>
-                           {
-                               c.Response.StatusCode = 201;
-                               c.Response.WithDefaultODataHeaders();
-                               c.Response.Write(ConcreteType.AsJson(b, childKeyValues));
-                           })
+                    .SetupPostEntity(entitySetPath, Class.Name + "s", ConcreteType.Initialize(parentKeyValues))
+                    .SetupPostEntity(navPropertyPath, Class.Name + "s", ConcreteType.Initialize(childKeyValues))
                     .Start())
             {
                 var parentEntity = Activator.CreateInstance(ConcreteType);
@@ -183,15 +148,7 @@ namespace CSharpWriterUnitTests
             var acceptPost = false;
 
             using (_serviceMock = new MockScenario()
-                    .Setup(c => c.Request.Method == "POST" &&
-                                c.Request.Path.Value == entitySetPath &&
-                                acceptPost,
-                           (b, c) =>
-                           {
-                               c.Response.StatusCode = 201;
-                               c.Response.WithDefaultODataHeaders();
-                               c.Response.Write(ConcreteType.AsJson(b, keyValues));
-                           })
+                    .SetupPostEntity(entitySetPath, Class.Name + "s", ConcreteType.Initialize(keyValues))
                     .Start())
             {
                 var collection = _serviceMock

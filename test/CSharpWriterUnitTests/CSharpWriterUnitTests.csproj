@@ -120,7 +120,9 @@
     <Compile Include="CodeSamples.cs" />
     <Compile Include="CSharpAccessModifierExtensions.cs" />
     <Compile Include="CSharpAccessModifiers.cs" />
+    <Compile Include="DataServiceContextWrapperExtensions.cs" />
     <Compile Include="EntityTestBase.cs" />
+    <Compile Include="EnumType.cs" />
     <Compile Include="Given_an_Indenter.cs" />
     <Compile Include="Given_an_OdcmClass_Entity_Collection_ExecuteAsync_Method.cs" />
     <Compile Include="Given_an_OdcmClass_Entity_Fetcher_Collection_Property.cs" />
@@ -131,6 +133,7 @@
     <Compile Include="Given_an_OdcmClass_Entity_Concrete_Interface.cs" />
     <Compile Include="Given_an_OdcmClass_Entity_Fetcher_Expand_Method.cs" />
     <Compile Include="Given_an_OdcmClass_Entity_Navigation_Property_Collection_forced_to_pascal_case.cs" />
+    <Compile Include="Given_an_OdcmClass_Entity_Navigation_Property_Key_forced_to_pascal_case.cs" />
     <Compile Include="Given_an_OdcmClass_Entity_Navigation_Property_Instance_forced_to_pascal_case.cs" />
     <Compile Include="Given_an_OdcmClass_Service_Navigation_Property_Collection.cs" />
     <Compile Include="Given_an_OdcmClass_Service_Navigation_Property_Instance.cs" />
@@ -147,6 +150,7 @@
     <Compile Include="Given_an_OdcmClass_Entity_Derived.cs" />
     <Compile Include="Given_a_nullable_Primitive_OdcmProperty.cs" />
     <Compile Include="Given_well_known_EDMX.cs" />
+    <Compile Include="JObjectExtensions.cs" />
     <Compile Include="MockedScenarioExtensions.cs" />
     <Compile Include="NavigationPropertyTestBase.cs" />
     <Compile Include="Given_an_OdcmClass_Service.cs" />
@@ -167,6 +171,7 @@
     <Compile Include="Given_an_OdcmModel.cs" />
     <Compile Include="Given_a_code_generator.cs" />
     <Compile Include="MethodInfoAssertionExtensions.cs" />
+    <Compile Include="ObjectExtensions.cs" />
     <Compile Include="ODataKeyPredicate.cs" />
     <Compile Include="ODataV4EdmxWriter.cs" />
     <Compile Include="OdcmTestExtensions.cs" />
@@ -178,7 +183,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="PropertyInfoAssertionsExtensions.cs" />
-    <Compile Include="ReflectionExtensions.cs" />
+    <Compile Include="ProxyExtensionExtensions.cs" />
     <Compile Include="StringCasingExtensions.cs" />
     <Compile Include="TypeAssertionsExtensions.cs" />
     <Compile Include="TypeExtensions.cs" />
