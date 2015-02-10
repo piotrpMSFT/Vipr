@@ -66,7 +66,7 @@ namespace CSharpWriterUnitTests
             var entityKeyValues = Class.GetSampleKeyArguments().ToArray();
 
             using (_mockedService = new MockService()
-                .SetupPostEntity(Class, ConcreteType.Initialize(entityKeyValues))
+                .SetupPostEntity(TargetEntity, entityKeyValues)
                 .SetupGetEntity(Class.GetDefaultEntityPropertyPath(_camelCasedName, entityKeyValues), Class.GetDefaultEntitySetName(), ConcreteType.Initialize(Class.GetSampleKeyArguments()))
                 .Start())
             {

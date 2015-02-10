@@ -114,7 +114,7 @@ namespace CSharpWriterUnitTests
         public void When_retrieved_through_Concrete_ConcreteInterface_Property_then_request_is_sent_with_original_name()
         {
             using (_mockedService = new MockService()
-                .SetupPostEntity(Class, ConcreteType)
+                .SetupPostEntity(TargetEntity)
                 .SetupGetEntity(TargetEntity)
                 .Start())
             {
@@ -135,11 +135,10 @@ namespace CSharpWriterUnitTests
         public void When_retrieved_through_Concrete_FetcherInterface_Property_then_request_is_sent_with_original_name()
         {
             var entityKeyValues = Class.GetSampleKeyArguments().ToArray();
-            var propertyPath = Class.GetDefaultEntityPath(entityKeyValues) + "/" + _navigationProperty.Name;
 
             using (_mockedService = new MockService()
-                .SetupPostEntity(Class, ConcreteType.Initialize(entityKeyValues))
-                .SetupGetEntity(propertyPath, Class.GetDefaultEntitySetName(), ConcreteType.Initialize(Class.GetSampleKeyArguments()))
+                .SetupPostEntity(TargetEntity, entityKeyValues)
+                .SetupGetEntityProperty(TargetEntity, entityKeyValues, _navigationProperty)
                 .Start())
             {
                 var instance = _mockedService
@@ -181,8 +180,8 @@ namespace CSharpWriterUnitTests
             var entityKeyValues = Class.GetSampleKeyArguments().ToArray();
 
             using (_mockedService = new MockService()
-                .SetupPostEntity(Class, ConcreteType.Initialize(entityKeyValues))
-                .SetupPostEntityPropertyChanges(Class, entityKeyValues, _navigationProperty)
+                .SetupPostEntity(TargetEntity, entityKeyValues)
+                .SetupPostEntityPropertyChanges(TargetEntity, entityKeyValues, _navigationProperty)
                 .Start())
             {
                 var context = _mockedService

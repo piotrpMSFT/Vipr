@@ -39,9 +39,9 @@ namespace CSharpWriterUnitTests
                 new object[] {new Uri(serviceMock.GetBaseAddress()), tokenGetterFunction});
         }
 
-        public static MockService SetupPostEntityPropertyChanges(this MockService mockService, OdcmClass @class, IEnumerable<Tuple<string, object>> keyValues, OdcmProperty property)
+        public static MockService SetupPostEntityPropertyChanges(this MockService mockService, EntityArtifacts targetEntity, IEnumerable<Tuple<string, object>> keyValues, OdcmProperty property)
         {
-            return mockService.SetupPostEntityChanges(@class.GetDefaultEntityPropertyPath(property, keyValues));
+            return mockService.SetupPostEntityChanges(targetEntity.Class.GetDefaultEntityPropertyPath(property, keyValues));
         }
 
         public static MockService SetupGetEntityProperty(this MockService mockService, EntityArtifacts targetEntity, IEnumerable<Tuple<string, object>> keyValues, OdcmProperty property)
@@ -56,14 +56,10 @@ namespace CSharpWriterUnitTests
         {
             propertyValues = propertyValues ?? targetEntity.Class.GetSampleKeyArguments();
 
-            return mockService.SetupPostEntity(targetEntity.Class.GetDefaultEntitySetPath(), targetEntity.Class.GetDefaultEntitySetName(),
+            return mockService.SetupPostEntity(
+                targetEntity.Class.GetDefaultEntitySetPath(), 
+                targetEntity.Class.GetDefaultEntitySetName(),
                 targetEntity.ConcreteType.Initialize(propertyValues));
-        }
-
-        public static MockService SetupPostEntity(this MockService mockService, OdcmClass @class, object response)
-        {
-            return mockService.SetupPostEntity(@class.GetDefaultEntitySetPath(), @class.GetDefaultEntitySetName(),
-                response);
         }
 
         public static MockService SetupGetEntity(this MockService mockService, EntityArtifacts targetEntity, 
@@ -78,11 +74,11 @@ namespace CSharpWriterUnitTests
                 expandTargets);
         }
 
-        public static MockService SetupGetEntitySet(this MockService mockService, OdcmClass @class, Type type,
+        public static MockService SetupGetEntitySet(this MockService mockService, EntityArtifacts targetEntity,
             IEnumerable<string> expandTargets = null)
         {
-            return mockService.SetupGetEntity(@class.GetDefaultEntitySetPath(), @class.GetDefaultEntitySetName(),
-                type.Initialize(@class.GetSampleKeyArguments()), expandTargets);
+            return mockService.SetupGetEntity(targetEntity.Class.GetDefaultEntitySetPath(), targetEntity.Class.GetDefaultEntitySetName(),
+                targetEntity.ConcreteType.Initialize(targetEntity.Class.GetSampleKeyArguments()), expandTargets);
         }
     }
 }

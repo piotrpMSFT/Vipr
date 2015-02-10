@@ -19,7 +19,7 @@ namespace CSharpWriterUnitTests
         public void When_ExecuteAsync_is_called_it_GETs_the_collection_by_name()
         {
             using (_serviceMock = new MockService()
-                    .SetupGetEntitySet(Class, ConcreteType)
+                    .SetupGetEntitySet(TargetEntity)
                     .Start())
             {
                 var context = _serviceMock
