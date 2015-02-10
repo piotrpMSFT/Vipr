@@ -50,21 +50,31 @@ namespace CSharpWriterUnitTests
             return originalProperty.Class.Properties[index];
         }
 
-        public static string DefaultEntitySetName(this OdcmClass odcmClass)
+        public static string GetDefaultEntitySetName(this OdcmClass odcmClass)
         {
             return odcmClass.Name + "s";
         }
 
-        public static string DefaultEntitySetPath(this OdcmClass odcmClass)
+        public static string GetDefaultEntitySetPath(this OdcmClass odcmClass)
         {
-            return "/" + odcmClass.DefaultEntitySetName();
+            return "/" + odcmClass.GetDefaultEntitySetName();
         }
 
-        public static string DefaultEntityPath(this OdcmClass odcmClass, IEnumerable<Tuple<string, object>> keyValues = null)
+        public static string GetDefaultEntityPath(this OdcmClass odcmClass, IEnumerable<Tuple<string, object>> keyValues = null)
         {
             keyValues = keyValues ?? odcmClass.GetSampleKeyArguments().ToArray();
             
-            return string.Format("{0}({1})", odcmClass.DefaultEntitySetPath(), ODataKeyPredicate.AsString(keyValues.ToArray()));
+            return string.Format("{0}({1})", odcmClass.GetDefaultEntitySetPath(), ODataKeyPredicate.AsString(keyValues.ToArray()));
+        }
+
+        public static string GetDefaultEntityPropertyPath(this OdcmClass odcmClass, OdcmProperty property, IEnumerable<Tuple<string, object>> keyValues = null)
+        {
+            return odcmClass.GetDefaultEntityPropertyPath(property.Name, keyValues);
+        }
+
+        public static string GetDefaultEntityPropertyPath(this OdcmClass odcmClass, string propertyName, IEnumerable<Tuple<string, object>> keyValues = null)
+        {
+            return string.Format("{0}/{1}", odcmClass.GetDefaultEntityPath(keyValues), propertyName);
         }
     }
 }

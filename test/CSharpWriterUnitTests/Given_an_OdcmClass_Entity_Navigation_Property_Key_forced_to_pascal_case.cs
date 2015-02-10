@@ -1,8 +1,8 @@
 using System.Linq;
 using Microsoft.Its.Recipes;
+using Microsoft.MockService;
 using Microsoft.OData.ProxyExtensions;
 using Moq;
-using ODataV4TestService.SelfHost;
 using Vipr.Core;
 using Xunit;
 
@@ -10,7 +10,7 @@ namespace CSharpWriterUnitTests
 {
     public class Given_an_OdcmClass_Entity_Navigation_Property_Key_forced_to_pascal_case : EntityTestBase
     {
-        private MockScenario _mockedService;
+        private MockService _mockedService;
         private string _camelCasedName;
         private readonly string _pascalCasedName;
 
@@ -35,19 +35,15 @@ namespace CSharpWriterUnitTests
         [Fact(Skip = "https://github.com/Microsoft/Vipr/issues/26")]
         public void When_retrieved_through_Collection_GetById_method_then_request_is_sent_to_server_with_original_key_parameter_name()
         {
-            var entitySetPath = Any.UriPath(1);
             var keyValues = Class.GetSampleKeyArguments().ToArray();
-            var keyPredicate = ODataKeyPredicate.AsString(keyValues);
-            var entityPath = string.Format("/{0}({1})", entitySetPath, keyPredicate);
 
-            using (_mockedService = new MockScenario()
-                    .SetupGetEntity(entityPath, Class.Name + "s", ConcreteType.Initialize(keyValues))
+            using (_mockedService = new MockService()
+                    .SetupGetEntity(TargetEntity, keyValues)
                     .Start())
             {
                 var collection = _mockedService
-                    .GetContext()
-                    .UseJson(Model.ToEdmx(), true)
-                    .CreateCollection(CollectionType, ConcreteType, entitySetPath);
+                    .GetDefaultContext(Model)
+                    .CreateCollection(CollectionType, ConcreteType, Class.GetDefaultEntitySetPath());
 
                 var fetcher = collection.InvokeMethod<RestShallowObjectFetcher>("GetById",
                     keyValues.Select(k => k.Item2).ToArray());
@@ -59,19 +55,15 @@ namespace CSharpWriterUnitTests
         [Fact(Skip = "https://github.com/Microsoft/Vipr/issues/26")]
         public void When_retrieved_through_Collection_GetById_indexer_then_request_is_sent_to_server_with_original_key_parameter_name()
         {
-            var entitySetPath = Any.UriPath(1);
             var keyValues = Class.GetSampleKeyArguments().ToArray();
-            var keyPredicate = ODataKeyPredicate.AsString(keyValues);
-            var entityPath = string.Format("/{0}({1})", entitySetPath, keyPredicate);
 
-            using (_mockedService = new MockScenario()
-                    .SetupGetEntity(entityPath, Class.Name + "s", ConcreteType.Initialize(keyValues))
+            using (_mockedService = new MockService()
+                    .SetupGetEntity(TargetEntity, keyValues)
                     .Start())
             {
                 var collection = _mockedService
-                    .GetContext()
-                    .UseJson(Model.ToEdmx(), true)
-                    .CreateCollection(CollectionType, ConcreteType, entitySetPath);
+                    .GetDefaultContext(Model)
+                    .CreateCollection(CollectionType, ConcreteType, Class.GetDefaultEntitySetPath());
 
                 var fetcher =
                     collection.GetIndexerValue<RestShallowObjectFetcher>(keyValues.Select(k => k.Item2).ToArray());

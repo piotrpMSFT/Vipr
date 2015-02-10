@@ -1,14 +1,9 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Net.Http;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Its.Recipes;
-using Microsoft.OData.ProxyExtensions;
-using Moq;
-using ODataV4TestService.SelfHost;
-using Vipr.Core;
+using Microsoft.MockService;
+using Microsoft.MockService.Extensions.ODataV4;
 using Vipr.Core.CodeModel;
 using Xunit;
 
@@ -16,8 +11,7 @@ namespace CSharpWriterUnitTests
 {
     public class Given_an_OdcmClass_Entity_Fetcher_Collection_Property : EntityTestBase
     {
-        private MockScenario _mockedService;
-        private object propertyValue;
+        private MockService _mockedService;
 
         public Given_an_OdcmClass_Entity_Fetcher_Collection_Property()
         {
@@ -37,13 +31,12 @@ namespace CSharpWriterUnitTests
 
             var propertyPath = "/" + entityPath + "/" + collectionProperty.Name;
 
-            using (_mockedService = new MockScenario()
+            using (_mockedService = new MockService()
                     .SetupGetWithEmptyResponse(propertyPath)
                     .Start())
             {
                 var fetcher = _mockedService
-                    .GetContext()
-                    .UseJson(Model.ToEdmx(), true)
+                    .GetDefaultContext(Model)
                     .CreateFetcher(Proxy.GetClass(collectionProperty.Class.Namespace, collectionProperty.Class.Name + "Fetcher"), entityPath);
 
                 var propertyValue = fetcher.GetPropertyValue(collectionProperty.Name);

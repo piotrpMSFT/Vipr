@@ -2,18 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Its.Recipes;
+using Microsoft.MockService;
+using Microsoft.MockService.Extensions.ODataV4;
 using Microsoft.OData.ProxyExtensions;
 using Moq;
-using ODataV4TestService.SelfHost;
 using Vipr.Core;
-using Vipr.Core.CodeModel;
 using Xunit;
 
 namespace CSharpWriterUnitTests
 {
     public class Given_an_OdcmClass_Entity_Navigation_Property_Collection_forced_to_pascal_case : EntityTestBase
     {
-        private MockScenario _mockedService;
+        private MockService _mockedService;
         private string _camelCasedName;
         private readonly string _pascalCasedName;
 
@@ -40,21 +40,15 @@ namespace CSharpWriterUnitTests
         [Fact(Skip = "Issue #24 https://github.com/Microsoft/vipr/issues/24")]
         public void When_retrieved_through_Concrete_ConcreteInterface_Property_then_request_is_sent_with_original_name()
         {
-            var entitySetName = Class.Name + "s";
-            var entitySetPath = "/" + entitySetName;
             var entityKeyValues = Class.GetSampleKeyArguments().ToArray();
-            var entityPath = string.Format("{0}({1})", entitySetPath, ODataKeyPredicate.AsString(entityKeyValues));
-            var expectedPath = entityPath + "/" + _camelCasedName;
-            var keyValues = Class.GetSampleKeyArguments().ToArray();
 
-            using (_mockedService = new MockScenario()
-                .SetupPostEntity(entitySetPath, Class.Name + "s", ConcreteType.Initialize(entityKeyValues))
-                .SetupGetEntity(expectedPath, Class.Name + "s", ConcreteType.Initialize(keyValues))
+            using (_mockedService = new MockService()
+                .SetupPostEntity(TargetEntity, entityKeyValues)
+                .SetupGetEntity(TargetEntity)
                 .Start())
             {
                 var instance = _mockedService
-                    .GetContext()
-                    .UseJson(Model.ToEdmx(), true)
+                    .GetDefaultContext(Model)
                     .CreateConcrete(ConcreteType);
 
                 instance.SetPropertyValues(Class.GetSampleKeyArguments());
@@ -69,24 +63,18 @@ namespace CSharpWriterUnitTests
         [Fact]
         public void When_retrieved_through_Concrete_FetcherInterface_Property_then_request_is_sent_with_original_name()
         {
-            var entitySetName = Class.Name + "s";
-            var entitySetPath = "/" + entitySetName;
             var entityKeyValues = Class.GetSampleKeyArguments().ToArray();
-            var entityPath = string.Format("{0}({1})", entitySetPath, ODataKeyPredicate.AsString(entityKeyValues));
-            var expectedPath = entityPath + "/" + _camelCasedName;
-            var keyValues = Class.GetSampleKeyArguments().ToArray();
 
-            using (_mockedService = new MockScenario()
-                .SetupPostEntity(entitySetPath, Class.Name + "s", ConcreteType.Initialize(entityKeyValues))
-                .SetupGetEntity(expectedPath, Class.Name + "s", ConcreteType.Initialize(keyValues))
+            using (_mockedService = new MockService()
+                .SetupPostEntity(Class, ConcreteType.Initialize(entityKeyValues))
+                .SetupGetEntity(Class.GetDefaultEntityPropertyPath(_camelCasedName, entityKeyValues), Class.GetDefaultEntitySetName(), ConcreteType.Initialize(Class.GetSampleKeyArguments()))
                 .Start())
             {
                 var instance = _mockedService
-                    .GetContext()
-                    .UseJson(Model.ToEdmx(), true)
+                    .GetDefaultContext(Model)
                     .CreateConcrete(ConcreteType);
 
-                instance.SetPropertyValues(Class.GetSampleKeyArguments());
+                instance.SetPropertyValues(entityKeyValues);
 
                 var propertyFetcher = instance.GetPropertyValue<ReadOnlyQueryableSetBase>(FetcherInterface,
                     _pascalCasedName);
@@ -102,13 +90,12 @@ namespace CSharpWriterUnitTests
             var expectedPath = "/" + entityPath + "/" + _camelCasedName;
             var keyValues = Class.GetSampleKeyArguments().ToArray();
 
-            using (_mockedService = new MockScenario()
+            using (_mockedService = new MockService()
                 .SetupGetEntity(expectedPath, Class.Name + "s", ConcreteType.Initialize(keyValues))
                 .Start())
             {
                 var fetcher = _mockedService
-                    .GetContext()
-                    .UseJson(Model.ToEdmx(), true)
+                    .GetDefaultContext(Model)
                     .CreateFetcher(FetcherType, entityPath);
 
                 var propertyFetcher = fetcher.GetPropertyValue<ReadOnlyQueryableSetBase>(_pascalCasedName);
@@ -126,14 +113,14 @@ namespace CSharpWriterUnitTests
             var entityPath = string.Format("{0}({1})", entitySetPath, ODataKeyPredicate.AsString(entityKeyValues));
             var expectedPath = entityPath + "/" + _camelCasedName;
 
-            using (_mockedService = new MockScenario()
+            using (_mockedService = new MockService()
                 .SetupPostEntity(entitySetPath, Class.Name + "s", ConcreteType.Initialize(entityKeyValues))
                 .SetupPostEntityChanges(expectedPath)
                 .Start())
             {
                 var context = _mockedService
-                    .GetContext()
-                    .UseJson(Model.ToEdmx(), true);
+                    .GetDefaultContext(Model);
+
                 var instance = context
                     .CreateConcrete(ConcreteType);
 

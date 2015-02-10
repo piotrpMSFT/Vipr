@@ -121,6 +121,7 @@
     <Compile Include="CSharpAccessModifierExtensions.cs" />
     <Compile Include="CSharpAccessModifiers.cs" />
     <Compile Include="DataServiceContextWrapperExtensions.cs" />
+    <Compile Include="EntityArtifacts.cs" />
     <Compile Include="EntityTestBase.cs" />
     <Compile Include="EnumType.cs" />
     <Compile Include="Given_an_Indenter.cs" />
@@ -150,8 +151,7 @@
     <Compile Include="Given_an_OdcmClass_Entity_Derived.cs" />
     <Compile Include="Given_a_nullable_Primitive_OdcmProperty.cs" />
     <Compile Include="Given_well_known_EDMX.cs" />
-    <Compile Include="JObjectExtensions.cs" />
-    <Compile Include="MockedScenarioExtensions.cs" />
+    <Compile Include="MockServiceExtensions.cs" />
     <Compile Include="NavigationPropertyTestBase.cs" />
     <Compile Include="Given_an_OdcmClass_Service.cs" />
     <Compile Include="Given_an_OdcmClass_Entity_Collection_Interface.cs" />
@@ -175,7 +175,6 @@
     <Compile Include="ODataKeyPredicate.cs" />
     <Compile Include="ODataV4EdmxWriter.cs" />
     <Compile Include="OdcmTestExtensions.cs" />
-    <Compile Include="OwinResponseExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -207,9 +206,9 @@
       <Project>{ea55efcf-3127-4e85-9a37-a645c06ffcc1}</Project>
       <Name>CSharpWriter</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Shared\ODataV4TestService\ODataV4TestService.csproj">
-      <Project>{250F70B8-8761-4982-A6D7-1435E6D74770}</Project>
-      <Name>ODataV4TestService</Name>
+    <ProjectReference Include="..\Shared\MockService\MockService.csproj">
+      <Project>{a6c40f9c-833d-4fbd-b9f2-7800a3621875}</Project>
+      <Name>MockService</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

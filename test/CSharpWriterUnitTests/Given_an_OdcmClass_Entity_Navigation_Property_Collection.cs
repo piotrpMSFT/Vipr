@@ -4,17 +4,18 @@
 using System;
 using FluentAssertions;
 using Microsoft.Its.Recipes;
+using Microsoft.MockService;
+using Microsoft.MockService.Extensions.ODataV4;
 using Microsoft.OData.ProxyExtensions;
 using System.Collections.Generic;
 using System.Linq;
-using ODataV4TestService.SelfHost;
 using Xunit;
 
 namespace CSharpWriterUnitTests
 {
     public class Given_an_OdcmClass_Entity_Navigation_Property_Collection : NavigationPropertyTestBase
     {
-        private MockScenario _mockedService;
+        private MockService _mockedService;
         public Given_an_OdcmClass_Entity_Navigation_Property_Collection()
         {
             base.Init(m =>
@@ -112,9 +113,9 @@ namespace CSharpWriterUnitTests
         [Fact(Skip = "Issue #24 https://github.com/Microsoft/vipr/issues/24")]
         public void When_retrieved_through_Concrete_ConcreteInterface_Property_then_request_is_sent_with_original_name()
         {
-            using (_mockedService = new MockScenario()
+            using (_mockedService = new MockService()
                 .SetupPostEntity(Class, ConcreteType)
-                .SetupGetEntity(Class, ConcreteType)
+                .SetupGetEntity(TargetEntity)
                 .Start())
             {
                 var instance = _mockedService
@@ -134,11 +135,11 @@ namespace CSharpWriterUnitTests
         public void When_retrieved_through_Concrete_FetcherInterface_Property_then_request_is_sent_with_original_name()
         {
             var entityKeyValues = Class.GetSampleKeyArguments().ToArray();
-            var propertyPath = Class.DefaultEntityPath(entityKeyValues) + "/" + _navigationProperty.Name;
+            var propertyPath = Class.GetDefaultEntityPath(entityKeyValues) + "/" + _navigationProperty.Name;
 
-            using (_mockedService = new MockScenario()
+            using (_mockedService = new MockService()
                 .SetupPostEntity(Class, ConcreteType.Initialize(entityKeyValues))
-                .SetupGetEntity(propertyPath, Class.DefaultEntitySetName(), ConcreteType.Initialize(Class.GetSampleKeyArguments()))
+                .SetupGetEntity(propertyPath, Class.GetDefaultEntitySetName(), ConcreteType.Initialize(Class.GetSampleKeyArguments()))
                 .Start())
             {
                 var instance = _mockedService
@@ -158,16 +159,15 @@ namespace CSharpWriterUnitTests
         public void When_retrieved_through_Fetcher_then_request_is_sent_to_server_with_original_name()
         {
             var entityKeyValues = Class.GetSampleKeyArguments().ToArray();
-            var propertyPath = Class.DefaultEntityPath(entityKeyValues) + "/" + _navigationProperty.Name;
+            var propertyPath = Class.GetDefaultEntityPath(entityKeyValues) + "/" + _navigationProperty.Name;
 
-            using (_mockedService = new MockScenario()
-                    .SetupGetEntity(propertyPath, Class.DefaultEntitySetName(), ConcreteType.Initialize(Class.GetSampleKeyArguments()))
+            using (_mockedService = new MockService()
+                    .SetupGetEntity(propertyPath, Class.GetDefaultEntitySetName(), ConcreteType.Initialize(Class.GetSampleKeyArguments()))
                     .Start())
             {
                 var fetcher = _mockedService
-                    .GetContext()
-                    .UseJson(Model.ToEdmx(), true)
-                    .CreateFetcher(FetcherType, Class.DefaultEntityPath(entityKeyValues));
+                    .GetDefaultContext(Model)
+                    .CreateFetcher(FetcherType, Class.GetDefaultEntityPath(entityKeyValues));
 
                 var propertyFetcher = fetcher.GetPropertyValue<ReadOnlyQueryableSetBase>(_navigationProperty.Name);
 
@@ -178,20 +178,16 @@ namespace CSharpWriterUnitTests
         [Fact]
         public void When_updated_through_Concrete_accessor_then_request_is_sent_to_server_with_original_name()
         {
-            var entitySetName = Class.Name + "s";
-            var entitySetPath = "/" + entitySetName;
             var entityKeyValues = Class.GetSampleKeyArguments().ToArray();
-            var entityPath = string.Format("{0}({1})", entitySetPath, ODataKeyPredicate.AsString(entityKeyValues));
-            var expectedPath = entityPath + "/" + _navigationProperty.Name;
 
-            using (_mockedService = new MockScenario()
-                .SetupPostEntity(entitySetPath, Class.Name + "s", ConcreteType.Initialize(entityKeyValues))
-                .SetupPostEntityChanges(expectedPath)
+            using (_mockedService = new MockService()
+                .SetupPostEntity(Class, ConcreteType.Initialize(entityKeyValues))
+                .SetupPostEntityPropertyChanges(Class, entityKeyValues, _navigationProperty)
                 .Start())
             {
                 var context = _mockedService
-                    .GetContext()
-                    .UseJson(Model.ToEdmx(), true);
+                    .GetDefaultContext(Model);
+
                 var instance = context
                     .CreateConcrete(ConcreteType);
 
