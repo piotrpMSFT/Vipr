@@ -78,13 +78,18 @@ namespace CSharpWriterUnitTests
 
         private static void WriteProxySource(IEnumerable<TextFile> proxySources)
         {
-            if (Debugger.IsAttached)
-                foreach (var sourceFile in proxySources)
-                {
-                    Debug.WriteLine("-------- {0} ------", sourceFile.RelativePath);
-                    Debug.WriteLine(sourceFile.Contents);
-                    Debug.WriteLine("-------------------", sourceFile.RelativePath);
-                }
+            if (!Debugger.IsAttached) return;
+
+            var textFiles = proxySources as TextFile[] ?? proxySources.ToArray();
+
+            for (var index = 0; index < textFiles.Count(); index++)
+            {
+                var sourceFile = textFiles[index];
+
+                Debug.WriteLine(String.Format("-------- {0} [{1}] ------", sourceFile.RelativePath, index));
+                Debug.WriteLine(sourceFile.Contents);
+                Debug.WriteLine("-------------------");
+            }
         }
 
         protected IEnumerable<TextFile> GetProxySources(OdcmModel model, IConfigurationProvider configurationProvider = null, IEnumerable<string> internalsVisibleTo = null)

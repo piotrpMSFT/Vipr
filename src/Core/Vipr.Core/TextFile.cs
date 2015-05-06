@@ -12,6 +12,6 @@
         {
         }
 
-        public string Contents { get; private set; }
+        public string Contents { get; protected set; }
     }
 }

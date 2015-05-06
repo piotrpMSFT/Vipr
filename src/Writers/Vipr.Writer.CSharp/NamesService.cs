@@ -109,6 +109,11 @@ namespace Vipr.Writer.CSharp
             return null;
         }
 
+        public static Identifier GetEnumTypeName(OdcmEnum odcmEnum)
+        {
+            return ResolveIdentifier(odcmEnum);
+        }
+
         public static Identifier GetConcreteInterfaceName(OdcmType odcmType)
         {
             var resolvedName = ResolveIdentifier(odcmType);

@@ -63,6 +63,7 @@
     <Compile Include="ContainerNameFromTypeMethod.cs" />
     <Compile Include="ContainerTypeFromNameMethod.cs" />
     <Compile Include="CSharpProject.cs" />
+    <Compile Include="CSharpTextFile.cs" />
     <Compile Include="EntityCollectionFunctionMethod.cs" />
     <Compile Include="EntityContainerConstructor.cs" />
     <Compile Include="EntityInstanceFunctionMethod.cs" />

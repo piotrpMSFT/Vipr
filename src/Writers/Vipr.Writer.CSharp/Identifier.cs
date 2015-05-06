@@ -11,25 +11,18 @@ namespace Vipr.Writer.CSharp
             Namespace = @namespace;
         }
 
-        public string Name { get; private set; }
+        public string Name { get; }
 
-        public string Namespace { get; private set; }
+        public string Namespace { get; }
 
-        public string FullName
-        {
-            get
-            {
-                return Namespace == null
-                    ? Name
-                    : Namespace + "." + Name;
-            }
-        }
+        public string FullName => Namespace == null
+            ? Name
+            : Namespace + "." + Name;
 
         public override string ToString()
         {
             return FullName;
         }
-
 
         public static Identifier Task { get { return new Identifier("global::System.Threading.Tasks", "Task"); } }
     }

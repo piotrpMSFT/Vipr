@@ -7,7 +7,7 @@ using Vipr.Core.CodeModel;
 
 namespace Vipr.Writer.CSharp
 {
-    internal class Interface : AttributableStructure
+    public class Interface : AttributableStructure
     {
         public Identifier Identifier { get; private set; }
         public string Description { get; private set; }

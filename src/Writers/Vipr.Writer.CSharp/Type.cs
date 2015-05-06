@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using Vipr.Core.CodeModel;
 
 namespace Vipr.Writer.CSharp
 {
